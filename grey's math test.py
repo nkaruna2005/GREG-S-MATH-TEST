@@ -56,7 +56,7 @@ class MathsTest:
 
     def play(self):
         """Main loop for running the maths test."""
-        print("Welcome to Nethaya's Maths Test!")
+        print("Welcome to Greg's Maths Test!")
         self.choose_difficulty()
 
         # Loop through all questions
