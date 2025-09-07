@@ -1,100 +1,117 @@
 import random
 import time
 
-# Function: create_question
-def create_question(var_min_num, var_max_num):
-    var_num1 = random.randint(var_min_num, var_max_num)
-    var_num2 = random.randint(var_min_num, var_max_num)
-    var_operator = random.choice(['+', '-'])
-    return f"{var_num1} {var_operator} {var_num2}"
+class MathsTest:
+    def __init__(self):
+        # Initialise variables for the game
+        self.var_score = 0                  # Total score
+        self.var_results = []               # Stores results (correct?, time)
+        self.var_correct_count = 0          # Number of correct answers
+        self.var_questions = 0              # Total number of questions
+        self.var_max_num = 0                # Maximum number used in questions
 
-# Function: ask_question
-def ask_question(var_question):
-    var_start_time = time.time()
-    var_answer = int(input(f"What is {var_question}? "))
-    var_end_time = time.time()
+    def choose_difficulty(self):
+        """Ask the user to select difficulty and set questions + max number."""
+        while True:
+            print("Select a difficulty:")
+            print("1) Easy\n2) Medium\n3) Hard")
+            choice = input("> ").lower()
 
-    var_time_taken = int(var_end_time - var_start_time)
-    var_correct_answer = eval(var_question)
-    var_is_correct = (var_answer == var_correct_answer)
+            if choice in ["1", "easy", "e"]:
+                self.var_questions, self.var_max_num = 5, 10
+                print("Easy mode selected!")
+                break
+            elif choice in ["2", "medium", "m"]:
+                self.var_questions, self.var_max_num = 10, 20
+                print("Medium mode selected!")
+                break
+            elif choice in ["3", "hard", "h"]:
+                self.var_questions, self.var_max_num = 15, 50
+                print("Hard mode selected!")
+                break
+            else:
+                print("Invalid choice! Enter 1, 2 or 3.")
 
-    return var_is_correct, var_time_taken
+    def create_question(self, min_num, max_num):
+        """Generate a random addition or subtraction question."""
+        num1 = random.randint(min_num, max_num)
+        num2 = random.randint(min_num, max_num)
+        operator = random.choice(['+', '-'])
 
-# Main program
-def maths_test():
-    print("Welcome to Greg's Maths Test!")
+        # Ensure subtraction never produces a negative answer
+        if operator == '-' and num1 < num2:
+            num1, num2 = num2, num1
 
-    # Difficulty selection
-    while True:
-        print("Select a difficulty:")
-        print("1) Easy\n2) Medium\n3) Hard")
-        var_choice = input("> ").lower()
+        return f"{num1} {operator} {num2}"
 
-        if var_choice in ["1", "e", "easy"]:
-            var_questions = 5
-            var_max_num = 10
-            print("Easy mode selected!")
-            break
-        elif var_choice in ["2", "m", "medium"]:
-            var_questions = 10
-            var_max_num = 20
-            print("Medium mode selected!")
-            break
-        elif var_choice in ["3", "h", "hard"]:
-            var_questions = 15
-            var_max_num = 50
-            print("Hard mode selected!")
-            break
-        else:
-            print("Invalid choice! Enter 1, 2 or 3.")
+    def ask_question(self, question):
+        """Ask the user the question, measure response time, and check correctness."""
+        start = time.time()  # Start timing
+        answer = int(input(f"What is {question}? "))  # User input
+        end = time.time()    # End timing
 
-    var_score = 0
-    var_results = []  # store (correct?, time)
-    var_correct_count = 0
+        time_taken = int(end - start)  # Round down to nearest second
+        correct_answer = eval(question)  # Evaluate expression
+        return (answer == correct_answer), time_taken
 
-    for var_q in range(1, var_questions + 1):
-        print(f"\nScore: {var_score}")
-        print(f"Question {var_q} of {var_questions}:")
+    def play(self):
+        """Main loop for running the maths test."""
+        print("Welcome to Nethaya's Maths Test!")
+        self.choose_difficulty()
 
-        # Final question = challenge
-        if var_q == var_questions:
-            print("Challenge question!")
-            var_question = create_question(var_max_num, var_max_num * 2)
-        else:
-            var_question = create_question(var_max_num // 2, var_max_num)
+        # Loop through all questions
+        for q in range(1, self.var_questions + 1):
+            print(f"\nScore: {self.var_score}")
+            print(f"Question {q} of {self.var_questions}:")
 
-        var_is_correct, var_time_taken = ask_question(var_question)
+            # Generate challenge question for the last one
+            if q == self.var_questions:
+                print("Challenge question!")
+                question = self.create_question(self.var_max_num, self.var_max_num * 2)
+            else:
+                question = self.create_question(self.var_max_num // 2, self.var_max_num)
 
-        if var_is_correct:
-            # Points system: 10 - seconds (min 1)
-            var_points = max(1, 10 - var_time_taken)
-            var_score += var_points
-            var_correct_count += 1
-            print(f"Correct! You answered in {var_time_taken} second(s) - {var_points} point(s) awarded.")
-        else:
-            print(f"Incorrect! You answered in {var_time_taken} second(s) - no points awarded.")
+            # Ask question and check result
+            correct, seconds = self.ask_question(question)
 
-        var_results.append((var_is_correct, var_time_taken))
+            if correct:
+                # Award points: 10 - seconds (minimum 1 point)
+                points = max(1, 10 - seconds)
+                self.var_score += points
+                self.var_correct_count += 1
+                print(f"Correct! You answered in {seconds} second(s) - {points} point(s) awarded.")
+            else:
+                print(f"Incorrect! You answered in {seconds} second(s) - no points awarded.")
 
-    # Final results
-    var_percentage = round((var_correct_count / var_questions) * 100)
-    var_avg_time = round(sum(t for _, t in var_results) / var_questions)
+            # Save result for breakdown
+            self.var_results.append((correct, seconds))
 
-    print("\nResults:")
-    print(f"Final score: {var_score}")
-    print(f"Correct answers: {var_percentage}%")
-    print(f"Average response time: {var_avg_time}s")
+        # Show results after all questions
+        self.show_results()
 
-    if var_correct_count == var_questions:
-        print("You're a Maths Master!")
+    def show_results(self):
+        """Display the final score, percentage, average time, and breakdown."""
+        percentage = round((self.var_correct_count / self.var_questions) * 100)
+        avg_time = round(sum(t for _, t in self.var_results) / self.var_questions)
 
-    print("\nBreakdown:")
-    print("Question  Correct  Time")
-    print("--------  -------  ----")
-    for i, (c, t) in enumerate(var_results, start=1):
-        var_correct_text = "Yes" if c else "No"
-        print(f"{i:<8}  {var_correct_text:<7}  {t}s")
+        print("\nResults:")
+        print(f"Final score: {self.var_score}")
+        print(f"Correct answers: {percentage}%")
+        print(f"Average response time: {avg_time}s")
+
+        # Special message if all correct
+        if self.var_correct_count == self.var_questions:
+            print("You're a Maths Master!")
+
+        # Breakdown section
+        print("\nBreakdown:")
+        print("Question  Correct  Time")
+        print("--------  -------  ----")
+        for i, (c, t) in enumerate(self.var_results, start=1):
+            print(f"{i:<8}  {'Yes' if c else 'No':<7}  {t}s")
+
 
 # Run the program
 if __name__ == "__main__":
-    maths_test()
+    game = MathsTest()
+    game.play()
